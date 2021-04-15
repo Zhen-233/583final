@@ -1,0 +1,181 @@
+yearName,regionName,expectancy,percent
+1950,High-income countries,64.88,1
+1955,High-income countries,67.35,1
+1960,High-income countries,68.71,1
+1965,High-income countries,69.69,1
+1970,High-income countries,70.88,1
+1975,High-income countries,72.31,1
+1980,High-income countries,73.62,1
+1985,High-income countries,74.76,1
+1990,High-income countries,75.79,1
+1995,High-income countries,76.95,1
+2000,High-income countries,78.16,1
+2005,High-income countries,79.31,1
+2010,High-income countries,80.29,1
+2015,High-income countries,80.87,1
+2020,High-income countries,81.46,1
+2025,High-income countries,82.14,1
+2030,High-income countries,82.91,1
+2035,High-income countries,83.54,1
+2040,High-income countries,84.14,1
+2045,High-income countries,84.72,1
+2050,High-income countries,85.28,1
+2055,High-income countries,85.83,1
+2060,High-income countries,86.37,1
+2065,High-income countries,86.92,1
+2070,High-income countries,87.45,1
+2075,High-income countries,87.97,1
+2080,High-income countries,88.5,1
+2085,High-income countries,89.01,1
+2090,High-income countries,89.53,1
+2095,High-income countries,90.04,1
+1950,Middle-income countries,43.32,1
+1955,Middle-income countries,45.75,1
+1960,Middle-income countries,47.79,1
+1965,Middle-income countries,53.18,1
+1970,Middle-income countries,56.39,1
+1975,Middle-income countries,58.9,1
+1980,Middle-income countries,60.91,1
+1985,Middle-income countries,62.75,1
+1990,Middle-income countries,63.76,1
+1995,Middle-income countries,64.87,1
+2000,Middle-income countries,66.21,1
+2005,Middle-income countries,67.98,1
+2010,Middle-income countries,69.95,1
+2015,Middle-income countries,71.43,1
+2020,Middle-income countries,72.35,1
+2025,Middle-income countries,73.22,1
+2030,Middle-income countries,74.04,1
+2035,Middle-income countries,74.8,1
+2040,Middle-income countries,75.52,1
+2045,Middle-income countries,76.21,1
+2050,Middle-income countries,76.85,1
+2055,Middle-income countries,77.46,1
+2060,Middle-income countries,78.03,1
+2065,Middle-income countries,78.58,1
+2070,Middle-income countries,79.11,1
+2075,Middle-income countries,79.61,1
+2080,Middle-income countries,80.1,1
+2085,Middle-income countries,80.6,1
+2090,Middle-income countries,81.08,1
+2095,Middle-income countries,81.57,1
+1950,Upper-middle-income countries,46.52,1
+1955,Upper-middle-income countries,48.19,1
+1960,Upper-middle-income countries,49.34,1
+1965,Upper-middle-income countries,57.11,1
+1970,Upper-middle-income countries,61.54,1
+1975,Upper-middle-income countries,64.41,1
+1980,Upper-middle-income countries,66.18,1
+1985,Upper-middle-income countries,67.97,1
+1990,Upper-middle-income countries,68.59,1
+1995,Upper-middle-income countries,69.57,1
+2000,Upper-middle-income countries,70.81,1
+2005,Upper-middle-income countries,72.31,1
+2010,Upper-middle-income countries,74.06,1
+2015,Upper-middle-income countries,75.49,1
+2020,Upper-middle-income countries,76.32,1
+2025,Upper-middle-income countries,77.17,1
+2030,Upper-middle-income countries,78.02,1
+2035,Upper-middle-income countries,78.82,1
+2040,Upper-middle-income countries,79.6,1
+2045,Upper-middle-income countries,80.38,1
+2050,Upper-middle-income countries,81.12,1
+2055,Upper-middle-income countries,81.84,1
+2060,Upper-middle-income countries,82.51,1
+2065,Upper-middle-income countries,83.15,1
+2070,Upper-middle-income countries,83.75,1
+2075,Upper-middle-income countries,84.31,1
+2080,Upper-middle-income countries,84.85,1
+2085,Upper-middle-income countries,85.38,1
+2090,Upper-middle-income countries,85.9,1
+2095,Upper-middle-income countries,86.41,1
+1950,Lower-middle-income countries,39.79,1
+1955,Lower-middle-income countries,43.14,1
+1960,Lower-middle-income countries,46.13,1
+1965,Lower-middle-income countries,48.96,1
+1970,Lower-middle-income countries,51.14,1
+1975,Lower-middle-income countries,53.75,1
+1980,Lower-middle-income countries,56.23,1
+1985,Lower-middle-income countries,57.95,1
+1990,Lower-middle-income countries,59.62,1
+1995,Lower-middle-income countries,61.1,1
+2000,Lower-middle-income countries,62.65,1
+2005,Lower-middle-income countries,64.64,1
+2010,Lower-middle-income countries,66.67,1
+2015,Lower-middle-income countries,68.11,1
+2020,Lower-middle-income countries,69.13,1
+2025,Lower-middle-income countries,70.07,1
+2030,Lower-middle-income countries,70.93,1
+2035,Lower-middle-income countries,71.72,1
+2040,Lower-middle-income countries,72.46,1
+2045,Lower-middle-income countries,73.18,1
+2050,Lower-middle-income countries,73.87,1
+2055,Lower-middle-income countries,74.53,1
+2060,Lower-middle-income countries,75.16,1
+2065,Lower-middle-income countries,75.78,1
+2070,Lower-middle-income countries,76.37,1
+2075,Lower-middle-income countries,76.95,1
+2080,Lower-middle-income countries,77.5,1
+2085,Lower-middle-income countries,78.05,1
+2090,Lower-middle-income countries,78.58,1
+2095,Lower-middle-income countries,79.11,1
+1950,Low-income countries,35.13,1
+1955,Low-income countries,37.85,1
+1960,Low-income countries,39.95,1
+1965,Low-income countries,42.25,1
+1970,Low-income countries,44.55,1
+1975,Low-income countries,46.61,1
+1980,Low-income countries,48.4,1
+1985,Low-income countries,50.11,1
+1990,Low-income countries,50.27,1
+1995,Low-income countries,51.68,1
+2000,Low-income countries,54.11,1
+2005,Low-income countries,57.61,1
+2010,Low-income countries,61.05,1
+2015,Low-income countries,63.44,1
+2020,Low-income countries,65.05,1
+2025,Low-income countries,66.48,1
+2030,Low-income countries,67.72,1
+2035,Low-income countries,68.8,1
+2040,Low-income countries,69.77,1
+2045,Low-income countries,70.66,1
+2050,Low-income countries,71.47,1
+2055,Low-income countries,72.22,1
+2060,Low-income countries,72.92,1
+2065,Low-income countries,73.59,1
+2070,Low-income countries,74.24,1
+2075,Low-income countries,74.87,1
+2080,Low-income countries,75.49,1
+2085,Low-income countries,76.11,1
+2090,Low-income countries,76.72,1
+2095,Low-income countries,77.33,1
+1950,No income group available,51.63,1
+1955,No income group available,55.72,1
+1960,No income group available,58.85,1
+1965,No income group available,61.6,1
+1970,No income group available,63.93,1
+1975,No income group available,66.18,1
+1980,No income group available,67.83,1
+1985,No income group available,70.26,1
+1990,No income group available,72.22,1
+1995,No income group available,74.05,1
+2000,No income group available,75.7,1
+2005,No income group available,77.05,1
+2010,No income group available,78.42,1
+2015,No income group available,79.28,1
+2020,No income group available,80.29,1
+2025,No income group available,81.05,1
+2030,No income group available,81.75,1
+2035,No income group available,82.3,1
+2040,No income group available,82.81,1
+2045,No income group available,83.27,1
+2050,No income group available,83.72,1
+2055,No income group available,84.17,1
+2060,No income group available,84.64,1
+2065,No income group available,85.16,1
+2070,No income group available,85.72,1
+2075,No income group available,86.32,1
+2080,No income group available,86.92,1
+2085,No income group available,87.49,1
+2090,No income group available,88.04,1
+2095,No income group available,88.56,1

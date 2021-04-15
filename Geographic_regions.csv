@@ -1,0 +1,181 @@
+yearName,regionName,expectancy,percent
+1950,Africa,37.49,1
+1955,Africa,40.04,1
+1960,Africa,42.45,1
+1965,Africa,44.53,1
+1970,Africa,46.61,1
+1975,Africa,48.82,1
+1980,Africa,50.74,1
+1985,Africa,52.09,1
+1990,Africa,51.93,1
+1995,Africa,52.33,1
+2000,Africa,53.53,1
+2005,Africa,56.78,1
+2010,Africa,60.25,1
+2015,Africa,62.66,1
+2020,Africa,64.11,1
+2025,Africa,65.44,1
+2030,Africa,66.65,1
+2035,Africa,67.74,1
+2040,Africa,68.73,1
+2045,Africa,69.64,1
+2050,Africa,70.47,1
+2055,Africa,71.24,1
+2060,Africa,71.96,1
+2065,Africa,72.63,1
+2070,Africa,73.26,1
+2075,Africa,73.87,1
+2080,Africa,74.46,1
+2085,Africa,75.06,1
+2090,Africa,75.64,1
+2095,Africa,76.23,1
+1950,Asia,42.3,1
+1955,Asia,44.57,1
+1960,Asia,46.49,1
+1965,Asia,52.68,1
+1970,Asia,56.38,1
+1975,Asia,59.19,1
+1980,Asia,61.45,1
+1985,Asia,63.46,1
+1990,Asia,64.98,1
+1995,Asia,66.55,1
+2000,Asia,68.33,1
+2005,Asia,70.03,1
+2010,Asia,71.83,1
+2015,Asia,73.28,1
+2020,Asia,74.2,1
+2025,Asia,75.05,1
+2030,Asia,75.83,1
+2035,Asia,76.55,1
+2040,Asia,77.23,1
+2045,Asia,77.89,1
+2050,Asia,78.52,1
+2055,Asia,79.12,1
+2060,Asia,79.7,1
+2065,Asia,80.27,1
+2070,Asia,80.84,1
+2075,Asia,81.41,1
+2080,Asia,81.97,1
+2085,Asia,82.56,1
+2090,Asia,83.14,1
+2095,Asia,83.73,1
+1950,Europe,63.69,1
+1955,Europe,67.13,1
+1960,Europe,69.21,1
+1965,Europe,70.05,1
+1970,Europe,70.62,1
+1975,Europe,71.05,1
+1980,Europe,71.66,1
+1985,Europe,72.84,1
+1990,Europe,72.67,1
+1995,Europe,73.11,1
+2000,Europe,73.8,1
+2005,Europe,75.3,1
+2010,Europe,77.18,1
+2015,Europe,78.33,1
+2020,Europe,79.09,1
+2025,Europe,79.86,1
+2030,Europe,80.61,1
+2035,Europe,81.32,1
+2040,Europe,82.01,1
+2045,Europe,82.67,1
+2050,Europe,83.31,1
+2055,Europe,83.94,1
+2060,Europe,84.57,1
+2065,Europe,85.22,1
+2070,Europe,85.87,1
+2075,Europe,86.51,1
+2080,Europe,87.11,1
+2085,Europe,87.68,1
+2090,Europe,88.22,1
+2095,Europe,88.78,1
+1950,Latin America and the Caribbean,51.4,1
+1955,Latin America and the Caribbean,54.24,1
+1960,Latin America and the Caribbean,56.79,1
+1965,Latin America and the Caribbean,58.95,1
+1970,Latin America and the Caribbean,61.23,1
+1975,Latin America and the Caribbean,63.33,1
+1980,Latin America and the Caribbean,65.29,1
+1985,Latin America and the Caribbean,67.15,1
+1990,Latin America and the Caribbean,68.96,1
+1995,Latin America and the Caribbean,70.67,1
+2000,Latin America and the Caribbean,72.25,1
+2005,Latin America and the Caribbean,73.45,1
+2010,Latin America and the Caribbean,74.44,1
+2015,Latin America and the Caribbean,75.24,1
+2020,Latin America and the Caribbean,76.07,1
+2025,Latin America and the Caribbean,77,1
+2030,Latin America and the Caribbean,77.97,1
+2035,Latin America and the Caribbean,78.83,1
+2040,Latin America and the Caribbean,79.67,1
+2045,Latin America and the Caribbean,80.48,1
+2050,Latin America and the Caribbean,81.26,1
+2055,Latin America and the Caribbean,82,1
+2060,Latin America and the Caribbean,82.7,1
+2065,Latin America and the Caribbean,83.36,1
+2070,Latin America and the Caribbean,83.99,1
+2075,Latin America and the Caribbean,84.59,1
+2080,Latin America and the Caribbean,85.17,1
+2085,Latin America and the Caribbean,85.73,1
+2090,Latin America and the Caribbean,86.27,1
+2095,Latin America and the Caribbean,86.81,1
+1950,Northern America,68.71,1
+1955,Northern America,69.7,1
+1960,Northern America,70.2,1
+1965,Northern America,70.51,1
+1970,Northern America,71.56,1
+1975,Northern America,73.35,1
+1980,Northern America,74.51,1
+1985,Northern America,75.07,1
+1990,Northern America,75.85,1
+1995,Northern America,76.68,1
+2000,Northern America,77.42,1
+2005,Northern America,78.44,1
+2010,Northern America,79.23,1
+2015,Northern America,79.15,1
+2020,Northern America,79.5,1
+2025,Northern America,80.23,1
+2030,Northern America,81.32,1
+2035,Northern America,82.04,1
+2040,Northern America,82.75,1
+2045,Northern America,83.44,1
+2050,Northern America,84.08,1
+2055,Northern America,84.68,1
+2060,Northern America,85.25,1
+2065,Northern America,85.81,1
+2070,Northern America,86.34,1
+2075,Northern America,86.86,1
+2080,Northern America,87.37,1
+2085,Northern America,87.89,1
+2090,Northern America,88.41,1
+2095,Northern America,88.92,1
+1950,Oceania,59.09,1
+1955,Oceania,61.81,1
+1960,Oceania,63.4,1
+1965,Oceania,64.58,1
+1970,Oceania,66.27,1
+1975,Oceania,68.16,1
+1980,Oceania,69.89,1
+1985,Oceania,71.06,1
+1990,Oceania,72.58,1
+1995,Oceania,73.62,1
+2000,Oceania,74.91,1
+2005,Oceania,76.25,1
+2010,Oceania,77.35,1
+2015,Oceania,78.44,1
+2020,Oceania,79.25,1
+2025,Oceania,79.9,1
+2030,Oceania,80.5,1
+2035,Oceania,81.03,1
+2040,Oceania,81.53,1
+2045,Oceania,82,1
+2050,Oceania,82.46,1
+2055,Oceania,82.91,1
+2060,Oceania,83.35,1
+2065,Oceania,83.77,1
+2070,Oceania,84.2,1
+2075,Oceania,84.64,1
+2080,Oceania,85.11,1
+2085,Oceania,85.61,1
+2090,Oceania,86.12,1
+2095,Oceania,86.64,1

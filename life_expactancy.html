@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .arc text {
+            font: 10px sans-serif;
+            text-anchor: middle;
+        }
+        .arc path {
+            stroke: #fff;
+        }
+        .title {
+            fill: #4E2FE6;
+            font-size: 30px;
+            font-weight: bold;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <div id="div_template"></div>
+</head>
+<body>
+
+<script>
+    /*
+    CPSC583 Final project
+    Zhen Gui
+    #30046660
+    */
+
+    /*
+    Part of codes are from:
+    [Radar Chart]https://www.jb51.net/article/93174.htm
+    [Pie Chart]https://www.d3-graph-gallery.com/graph/pie_basic.html
+    [Polyline]https://www.d3-graph-gallery.com/graph/connectedscatter_multi.html
+    [Tooltip]https://www.d3-graph-gallery.com/graph/interactivity_tooltip.html#template
+    */
+
+    const margin = {top: 0, right: 0, bottom: 0, left: 0};
+    const width = 1200 - margin.left - margin.right;
+    const height = 1800 - margin.top - margin.bottom;
+
+    //main
+    const svg = d3.select('body')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    //colour
+    const colorScale = d3.scaleLinear()
+        .domain([1950, 2022.5, 2095])
+        .range(["#F3EE9F","#E29FF3","#4E2FE6"]);
+    const colorScale2 = d3.scaleLinear()
+        .domain([1950, 2095])
+        .range(["#B2F6B7","#00855F"]);
+    const colorScale3 = d3.scaleLinear()
+        .domain([1950, 2095])
+        .range(["#D3E7FF","#1F4FC5"]);
+    const colorScale4 = d3.scaleLinear()
+        .domain([1950, 2095])
+        .range(["#FFE2F7","#DB557D"]);
+    const colorScale5 = d3.scaleLinear()
+        .domain([1950, 2095])
+        .range(["#FFECBA","#9F6312"]);
+
+    //calculate the points that will be used to draw the grid
+    const radius = 270,
+        total = 30*9,
+        level = 20,
+        rangeMin = 0,
+        rangeMax = 100,
+        arc1 = Math.PI*2;
+    const onePiece = arc1/total;
+
+    const polygons = {
+        webs: [],
+        webPoints: []
+    };
+    for(var k=level;k>0;k--) {
+        var webs1 = '',
+            webPoints = [];
+        var r = radius/level * k;
+        for(var i=0;i<total;i++) {
+            var x = r * Math.sin(i * onePiece),
+                y = r * Math.cos(i * onePiece);
+            webs1 += x + ',' + y + ' ';
+            webPoints.push({
+                x: x,
+                y: y
+            });
+        }
+        polygons.webs.push(webs1);
+        polygons.webPoints.push(webPoints);
+    }
+
+    //draw webs
+    const webs = svg.append('g')
+        .attr("class","webs")
+        .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+    webs.selectAll('polygon')
+        .data(polygons.webs)
+        .enter()
+        .append('polygon')
+        .attr('points', function(d) {
+            return d;
+        })
+        .style("fill", "none")
+        .style("stroke", "#4e2fe6")
+        .style("stroke-width", 0.1);
+
+    //draw lines
+    const lines = svg.append('g')
+        .attr("class","lines")
+        .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+    lines.selectAll("line")
+        .data(polygons.webPoints[0])
+        .enter()
+        .append("line")
+        .attr('x1', 0)
+        .attr('y1', 0)
+        .attr('x2', function(d) {
+            return d.x;
+        })
+        .attr('y2', function(d) {
+            return d.y;
+        })
+        .style("stroke", "#4E2FE6")
+        .style("stroke-width", 0.1);
+
+    //draw SDG groups
+    d3.csv("SDGregion.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        const pie = d3.pie().value(function(d) {
+            return d.percent;
+        });
+        const path = d3.arc()
+            .outerRadius(function(d) { return d.data.expectancy * 2.7; })
+            .innerRadius(0);
+        const myborder = d3.arc()
+            .outerRadius(273)
+            .innerRadius(260);
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .text("Life expectancy at birth by regions and countries")
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "17px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "40px")
+            .style("top", "720px");
+        var Tooltip3 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .text("Double click to deselect")
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "17px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "880px")
+            .style("top", "70px");
+        var Tooltip4 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .text("Click to select")
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "17px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "140px")
+            .style("top", "70px");
+
+        //calculate labels' positions
+        var textPoints = [];
+        var textRadius = radius + 160;
+        for(var i=0;i<total/30;i++) {
+            var x = textRadius * Math.sin(i * onePiece * 30 + Math.PI/9),
+                y = -textRadius * Math.cos(i * onePiece * 30 + Math.PI/9)*0.7;
+            textPoints.push({
+                x: x,
+                y: y
+            });
+        }
+        //get names
+        var textNames = [];
+        textNames.push(data[0].regionName);
+        for(var i=1;i<data.length;i++) {
+            if (data[i].regionName != data[i-1].regionName){
+                textNames.push(data[i].regionName);
+            }
+        }
+        //draw labels
+        const texts = svg.append("g")
+            .attr("class","texts")
+            .attr("transform", "translate(" + (width / 2-90) + "," + 400 + ")");
+        texts.selectAll('text')
+            .data(textPoints)
+            .enter()
+            .append('text')
+            .attr('x', function(d) {return d.x;})
+            .attr('y', function(d) {return d.y;})
+            .text(function(d,i) {return textNames[i]})
+            .style("font-size","10px");
+
+        //calculate percent
+        var tmp_percent = [];
+        for(var i=0;i<total/30;i++){tmp_percent.push({percent: 1})};
+        //draw borders
+        const border = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        border.selectAll("arc")
+            .data(pie(tmp_percent))
+            .enter().append("path")
+            .attr("d", myborder)
+            .attr("fill", "#4E2FE6")
+            .style("stroke", "#F9F9F6")
+            .style("stroke-width", 3)
+
+        //draw bars
+        const arc = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        arc.selectAll(".arc")
+            .data(pie(data))
+            .enter().append("path")
+            .attr("d", path)
+            .attr("fill", function(d) { return colorScale(d.data.yearName); })
+            .style("stroke", "white")
+            .style("stroke-width", 0.1)
+            .on("click", function(d) {
+                d3.select(this)
+                    .style("stroke", "black")
+                    .style("stroke-width", 1)
+                    .attr("transform", "scale(1.05)")
+                Tooltip
+                    .html(findPoint2(d.index))
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseover", function(d){
+                Tooltip2
+                    .transition()
+                    .text("Countries are grouped by Sustainable Development Goal (SDG) regions")
+                    .duration(2000)})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr("transform", "scale(1/1.05)")
+                    .style("stroke", "white")
+                    .style("stroke-width", 0.1)
+                Tooltip
+                    .style("opacity", 0)})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                Tooltip2
+                    .transition()
+                    .text("Life expectancy at birth by regions and countries")
+                    .duration(2000)});
+
+        //return the data that need to be printed
+        function findPoint2(index){
+            var n = Math.floor(index/30);
+            var yName = 1950 + (index-30*n)*5;
+            var yName2 = yName + 5;
+            var exp = data[index].expectancy;
+            var cName = data[index].regionName;
+            var result = "In " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            console.log(result);
+            return result;
+        }
+
+    });
+
+
+
+    //draw geographic regions
+    d3.csv("Geographic_regions.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        const pie = d3.pie().value(function(d) {
+            return d.percent;
+        });
+        const path = d3.arc()
+            .outerRadius(function(d) { return d.data.expectancy * 2.7; })
+            .innerRadius(0);
+        const myborder = d3.arc()
+            .outerRadius(273)
+            .innerRadius(260);
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#00855F")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "100px")
+            .style("top", "780px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .text("Life expectancy at birth by geographic regions")
+            .style("position", "absolute")
+            .style("color", "#00855F")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "100px")
+            .style("top", "1220px");
+
+
+        //calculate labels' positions
+        var textPoints = [];
+        var textRadius = 230;
+        for(var i=0;i<6;i++) {
+            var x = textRadius * Math.sin((i * 2 + 1)* Math.PI/6),
+                y = -textRadius * Math.cos((i * 2 + 1)* Math.PI/6)*0.9;
+            textPoints.push({
+                x: x,
+                y: y
+            });
+        }
+        //get names
+        var textNames = [];
+        textNames.push(data[0].regionName);
+        for(var i=1;i<data.length;i++) {
+            if (data[i].regionName != data[i-1].regionName){
+                textNames.push(data[i].regionName);
+            }
+        }
+        //draw labels
+        const texts = svg.append("g")
+            .attr("class","texts")
+            .attr("transform", "translate(" + 230 + "," + 1010 + ")");
+        texts.selectAll('text')
+            .data(textPoints)
+            .enter()
+            .append('text')
+            .attr('x', function(d) {return d.x;})
+            .attr('y', function(d) {return d.y;})
+            .text(function(d,i) {return textNames[i]})
+            .style("font-size","10px");
+
+        //calculate percent
+        var tmp_percent = [];
+        for(var i=0;i<6;i++){tmp_percent.push({percent: 1})};
+        //draw borders
+        const border = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 260 + "," + 1000 + ")");
+        border.selectAll("arc")
+            .data(pie(tmp_percent))
+            .enter().append("path")
+            .attr("d", myborder)
+            .attr("fill", "#00855F")
+            .attr("transform", "scale(0.6)")
+            .style("stroke", "#F9F9F6")
+            .style("stroke-width", 3)
+
+        //draw bars
+        const arc = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 260 + "," + 1000 + ")");
+        arc.selectAll("arc")
+            .data(pie(data))
+            .enter().append("path")
+            .attr("d", path)
+            .attr("fill", function(d) { return colorScale2(d.data.yearName); })
+            .style("stroke", "white")
+            .style("stroke-width", 0.1)
+            .attr("transform", "scale(0.6)")
+            .on("click", function(d) {
+                d3.select(this)
+                    .style("stroke", "black")
+                    .style("stroke-width", 1)
+                Tooltip
+                    .html(findPoint2(d.index))
+                    .style("opacity", 1);})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .style("stroke", "white")
+                    .style("stroke-width", 0.1)
+                Tooltip
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint2(index){
+            var n = Math.floor(index/30);
+            var yName = 1950 + (index-30*n)*5;
+            var yName2 = yName + 5;
+            var exp = data[index].expectancy;
+            var cName = data[index].regionName;
+            var result = "In " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            console.log(result);
+            return result;
+        }
+
+    });
+
+
+    //draw UN development groups
+    d3.csv("UN_development.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        const pie = d3.pie().value(function(d) {
+            return d.percent;
+        });
+        const path = d3.arc()
+            .outerRadius(function(d) { return d.data.expectancy * 2.7; })
+            .innerRadius(0);
+        const myborder = d3.arc()
+            .outerRadius(273)
+            .innerRadius(260);
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#1F4FC5")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "610px")
+            .style("top", "750px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .text("Life expectancy at birth by UN development groups")
+            .style("position", "absolute")
+            .style("color", "#1F4FC5")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "650px")
+            .style("top", "1220px");
+
+
+        //calculate labels' positions
+        var textPoints = [];
+        var textRadius = 270;
+        for(var i=0;i<7;i++) {
+            var x = textRadius * Math.sin((i * 2 + 1)* Math.PI/7),
+                y = -textRadius * Math.cos((i * 2 + 1)* Math.PI/7)*0.75;
+            textPoints.push({
+                x: x,
+                y: y
+            });
+        }
+        //get names
+        var textNames = [];
+        textNames.push(data[0].regionName);
+        for(var i=1;i<data.length;i++) {
+            if (data[i].regionName != data[i-1].regionName){
+                textNames.push(data[i].regionName);
+            }
+        }
+        //draw labels
+        const texts = svg.append("g")
+            .attr("class","texts")
+            .attr("transform", "translate(" + 725 + "," + 990 + ")");
+        texts.selectAll('text')
+            .data(textPoints)
+            .enter()
+            .append('text')
+            .attr('x', function(d) {return d.x;})
+            .attr('y', function(d) {return d.y;})
+            .text(function(d,i) {return textNames[i]})
+            .style("font-size","10px");
+
+        //calculate percent
+        var tmp_percent = [];
+        for(var i=0;i<7;i++){tmp_percent.push({percent: 1})};
+        //draw borders
+        const border = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 810 + "," + 1000 + ")");
+        border.selectAll("arc")
+            .data(pie(tmp_percent))
+            .enter().append("path")
+            .attr("d", myborder)
+            .attr("fill", "#1F4FC5")
+            .attr("transform", "scale(0.6)")
+            .style("stroke", "#F9F9F6")
+            .style("stroke-width", 3)
+
+        //draw bars
+        const arc = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 810 + "," + 1000 + ")");
+        arc.selectAll("arc")
+            .data(pie(data))
+            .enter().append("path")
+            .attr("d", path)
+            .attr("fill", function(d) { return colorScale3(d.data.yearName); })
+            .style("stroke", "white")
+            .style("stroke-width", 0.1)
+            .attr("transform", "scale(0.6)")
+            .on("click", function(d) {
+                d3.select(this)
+                    .style("stroke", "black")
+                    .style("stroke-width", 1)
+                Tooltip
+                    .html(findPoint2(d.index))
+                    .style("opacity", 1);})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .style("stroke", "white")
+                    .style("stroke-width", 0.1)
+                Tooltip
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint2(index){
+            var n = Math.floor(index/30);
+            var yName = 1950 + (index-30*n)*5;
+            var yName2 = yName + 5;
+            var exp = data[index].expectancy;
+            var cName = data[index].regionName;
+            var result = "In " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            console.log(result);
+            return result;
+        }
+
+    });
+
+
+
+    //draw world life expectancy
+    d3.csv("world.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        const pie = d3.pie().value(function(d) {
+            return d.percent;
+        });
+        const path = d3.arc()
+            .outerRadius(function(d) { return d.data.expectancy * 2.7; })
+            .innerRadius(0);
+        const myborder = d3.arc()
+            .outerRadius(273)
+            .innerRadius(260);
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#DB557D")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "100px")
+            .style("top", "1280px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .text("World Life expectancy at birth")
+            .style("position", "absolute")
+            .style("color", "#DB557D")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "100px")
+            .style("top", "1720px");
+
+
+        //calculate labels' positions
+        var textPoints = [];
+        var textRadius = 200;
+        for(var i=0;i<1;i++) {
+            var x = textRadius * Math.sin((i * 2 + 1)* Math.PI/1),
+                y = -textRadius * Math.cos((i * 2 + 1)* Math.PI/1)*0.9;
+            textPoints.push({
+                x: x,
+                y: y
+            });
+        }
+        //get names
+        var textNames = [];
+        textNames.push(data[0].regionName);
+        for(var i=1;i<data.length;i++) {
+            if (data[i].regionName != data[i-1].regionName){
+                textNames.push(data[i].regionName);
+            }
+        }
+        //draw labels
+        const texts = svg.append("g")
+            .attr("class","texts")
+            .attr("transform", "translate(" + 230 + "," + 1510 + ")");
+        texts.selectAll('text')
+            .data(textPoints)
+            .enter()
+            .append('text')
+            .attr('x', function(d) {return d.x;})
+            .attr('y', function(d) {return d.y;})
+            .text(function(d,i) {return textNames[i]})
+            .style("font-size","10px");
+
+        //calculate percent
+        var tmp_percent = [];
+        for(var i=0;i<1;i++){tmp_percent.push({percent: 1})};
+        //draw borders
+        const border = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 260 + "," + 1500 + ")");
+        border.selectAll("arc")
+            .data(pie(tmp_percent))
+            .enter().append("path")
+            .attr("d", myborder)
+            .attr("fill", "#DB557D")
+            .attr("transform", "scale(0.6)")
+            .style("stroke", "#F9F9F6")
+            .style("stroke-width", 3)
+
+        //draw bars
+        const arc = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 260 + "," + 1500 + ")");
+        arc.selectAll("arc")
+            .data(pie(data))
+            .enter().append("path")
+            .attr("d", path)
+            .attr("fill", function(d) { return colorScale4(d.data.yearName); })
+            .style("stroke", "white")
+            .style("stroke-width", 0.1)
+            .attr("transform", "scale(0.6)")
+            .on("click", function(d) {
+                d3.select(this)
+                    .style("stroke", "black")
+                    .style("stroke-width", 1)
+                Tooltip
+                    .html(findPoint2(d.index))
+                    .style("opacity", 1);})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .style("stroke", "white")
+                    .style("stroke-width", 0.1)
+                Tooltip
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint2(index){
+            var n = Math.floor(index/30);
+            var yName = 1950 + (index-30*n)*5;
+            var yName2 = yName + 5;
+            var exp = data[index].expectancy;
+            var cName = data[index].regionName;
+            var result = "In " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            console.log(result);
+            return result;
+        }
+
+    });
+
+
+    //draw World Bank income groups
+    d3.csv("World_Bank_income.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        const pie = d3.pie().value(function(d) {
+            return d.percent;
+        });
+        const path = d3.arc()
+            .outerRadius(function(d) { return d.data.expectancy * 2.7; })
+            .innerRadius(0);
+        const myborder = d3.arc()
+            .outerRadius(273)
+            .innerRadius(260);
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#9F6312")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "610px")
+            .style("top", "1280px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .text("Life expectancy at birth by World Bank income groups")
+            .style("position", "absolute")
+            .style("color", "#9F6312")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("left", "650px")
+            .style("top", "1720px");
+
+
+        //calculate labels' positions
+        var textPoints = [];
+        var textRadius = 230;
+        for(var i=0;i<6;i++) {
+            var x = textRadius * Math.sin((i * 2 + 1)* Math.PI/6),
+                y = -textRadius * Math.cos((i * 2 + 1)* Math.PI/6)*0.9;
+            textPoints.push({
+                x: x,
+                y: y
+            });
+        }
+        //get names
+        var textNames = [];
+        textNames.push(data[0].regionName);
+        for(var i=1;i<data.length;i++) {
+            if (data[i].regionName != data[i-1].regionName){
+                textNames.push(data[i].regionName);
+            }
+        }
+        //draw labels
+        const texts = svg.append("g")
+            .attr("class","texts")
+            .attr("transform", "translate(" + 760 + "," + 1500 + ")");
+        texts.selectAll('text')
+            .data(textPoints)
+            .enter()
+            .append('text')
+            .attr('x', function(d) {return d.x;})
+            .attr('y', function(d) {return d.y;})
+            .text(function(d,i) {return textNames[i]})
+            .style("font-size","10px");
+
+        //calculate percent
+        var tmp_percent = [];
+        for(var i=0;i<6;i++){tmp_percent.push({percent: 1})};
+        //draw borders
+        const border = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 810 + "," + 1500 + ")");
+        border.selectAll("arc")
+            .data(pie(tmp_percent))
+            .enter().append("path")
+            .attr("d", myborder)
+            .attr("fill", "#9F6312")
+            .attr("transform", "scale(0.6)")
+            .style("stroke", "#F9F9F6")
+            .style("stroke-width", 3)
+
+        //draw bars
+        const arc = svg
+            .append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + 810 + "," + 1500 + ")");
+        arc.selectAll("arc")
+            .data(pie(data))
+            .enter().append("path")
+            .attr("d", path)
+            .attr("fill", function(d) { return colorScale5(d.data.yearName); })
+            .style("stroke", "white")
+            .style("stroke-width", 0.1)
+            .attr("transform", "scale(0.6)")
+            .on("click", function(d) {
+                d3.select(this)
+                    .style("stroke", "black")
+                    .style("stroke-width", 1)
+                Tooltip
+                    .html(findPoint2(d.index))
+                    .style("opacity", 1);})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .style("stroke", "white")
+                    .style("stroke-width", 0.1)
+                Tooltip
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint2(index){
+            var n = Math.floor(index/30);
+            var yName = 1950 + (index-30*n)*5;
+            var yName2 = yName + 5;
+            var exp = data[index].expectancy;
+            var cName = data[index].regionName;
+            var result = "In " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            console.log(result);
+            return result;
+        }
+
+    });
+
+
+
+
+    //load the file of SUB-SAHARAN AFRICA
+    d3.csv("ssa_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+    //load the file of NORTHERN AFRICA AND WESTERN ASIA
+    d3.csv("nawa_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 40+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 40+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+
+    //load the file of CENTRAL AND SOUTHERN ASIA
+    d3.csv("csa_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 80+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 80+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+
+    //load the file of EASTERN AND SOUTH-EASTERN ASIA
+    d3.csv("esea_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 120+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 120+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+
+    //load the file of LATIN AMERICA AND THE CARIBBEAN
+    d3.csv("lac_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 160+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 160+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+    //load the file of AUSTRALIA/NEW ZEALAND
+    d3.csv("anz_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 200+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 200+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+    //load the file of OCEANIA (EXCLUDE AUSTRALIA & NEW ZEALAND)
+    d3.csv("o_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 240+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 240+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+
+    //load the file of EUROPE
+    d3.csv("e_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 280+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 280+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+    //load the file of NORTHERN AMERICA
+    d3.csv("na_countries.csv", function(error, data) {
+        if (error) {
+            throw error;
+        }
+
+        //labels
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+        var Tooltip2 = d3.select("#div_template")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("color", "#4E2FE6")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        //change the data to arrays
+        var values = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.year1,t.year2, t.year3, t.year4,
+                t.year5, t.year6, t.year7, t.year8, t.year9,
+                t.year10, t.year11, t.year12, t.year13, t.year14,
+                t.year15, t.year16, t.year17, t.year18, t.year19,
+                t.year20, t.year21, t.year22, t.year23, t.year24,
+                t.year25, t.year26, t.year27, t.year28, t.year29,
+                t.year30,];
+            values.push(tmp2);
+        }
+        var values2 = [];
+        for(var i=0;i<data.length;i++) {
+            var t = data[i];
+            var tmp2 = [t.countryName];
+            values2.push(tmp2);
+        }
+
+        //calculate the position of points
+        var areasData = [];
+        for(var i=0;i<values.length;i++) {
+            var value = values[i],
+                points = [];
+            for(var k=0;k<total/9;k++) {
+                var r = radius * (value[k] - rangeMin)/(rangeMax - rangeMin);
+                var x = r * Math.sin(k * onePiece),
+                    y = -r * Math.cos(k * onePiece);
+                points.push({x: x, y: y})
+            }
+            areasData.push({
+                points: points,
+                cname: values2[i],
+                value3: values[i]
+            });
+        }
+        //line generator
+        var line = d3.line()
+            .x(function(d) { return d.x })
+            .y(function(d) { return d.y })
+
+        //draw polylines
+        const polylines = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        polylines.selectAll("polylines")
+            .data(areasData)
+            .enter()
+            .append("path")
+            .attr("d", function(d){ return line(d.points) } )
+            .style("stroke", "red")
+            .attr("transform", "rotate(" + 320+3/4 + ")")
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("opacity", 0)
+            .on("mouseover", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                Tooltip
+                    .html("Country: " + d.cname)
+                    .style("opacity", 1)
+                    .style("left", d3.event.clientX + "px")
+                    .style("top", d3.event.clientY + "px");})
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)
+                Tooltip
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(2000)});
+
+        //draw points
+        const circles = svg.append('g')
+            .attr("class","circles")
+            .attr("transform", "translate(" + width / 2 + "," + 400 + ")");
+        circles.selectAll('circle')
+            .data(areasData)
+            .enter()
+            .selectAll("myPoints")
+            .data(function(d){ return d.points })
+            .enter()
+            .append('circle')
+            .attr('cx', function(d) {
+                return d.x;
+            })
+            .attr('cy', function(d) {
+                return d.y;
+            })
+            .attr("transform", "rotate(" + 320+3/4 + ")")
+            .attr('r', 1.5)
+            .style("fill", "#F3EE9F")
+            .style("stroke", "#4E2FE6")
+            .style("stroke-width", 0.3)
+            .on("click", function(d) {
+                d3.select(this)
+                    .attr('r', 2)
+                    .style("fill", "red")
+                    .style("stroke", "red")
+                Tooltip2
+                    .html(findPoint(d.x,d.y))
+                    .style("opacity", 1)
+                    .style("left", 425 + "px")
+                    .style("top", 60 + "px");})
+            .on("dblclick", function(d) {
+                d3.select(this)
+                    .attr('r', 1.5)
+                    .style("fill", "#F3EE9F")
+                    .style("stroke", "#4E2FE6")
+                Tooltip2
+                    .style("opacity", 0)});
+
+        //return the data that need to be printed
+        function findPoint(cx,cy){
+            for(var i=0;i<areasData.length;i++){
+                for(var k=0;k<areasData[i].points.length;k++){
+                    var x = areasData[i].points[k].x,
+                        y = areasData[i].points[k].y;
+                    if (x == cx && y == cy){
+                        var yName = 1950 + 5*k,
+                            yName2 = yName + 5;
+                        var exp = areasData[i].value3[k];
+                        var cName = areasData[i].cname;
+                    }
+                }
+            }
+            var result = "In country " + cName + " ,during " + yName + "~" + yName2 + ", the life expectancy is " + exp + " years";
+            return result;
+        }
+    });
+
+
+
+
+    svg.append("g")
+        .attr("transform", "translate(" + (width / 2 - 150) + "," + 20 + ")")
+        .append("text")
+        .text("Life expectancy at birth")
+        .attr("class", "title");
+
+    d3.select("body").style("background-color", "#F9F9F6");
+
+</script>
+</body>
+</html>
